@@ -1,0 +1,453 @@
+// Complete Therapy Management System Database Schema
+// For use with dbdiagram.io
+//
+// Business Logic:
+// - Therapists can be related to 1 or many therapies
+// - Each therapy has 1 or more plans (individual, packages, etc.) with different pricing
+// - Each therapist has 0 or 1 rate for each plan of each therapy they offer
+// - Authorizations are mandatory linked to 1 therapy
+// - Appointments link to specific plan purchases (not just plans)
+// - Plan purchases track each time a client buys a plan
+// - Summary tables maintain real-time usage tracking for performance
+// - Payments track client payments per plan purchase (installments allowed)
+// - Individual plan payments link to specific appointments
+// - Multi-session plan payments link to plan purchase only
+
+// Core User Models
+Table person {
+  id integer [primary key]
+  name varchar(100) [not null]
+  lastname varchar(100) [not null]
+  birthdate date [not null]
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+}
+
+// Address Table: Each person can have one or more addresses
+Table address {
+  id integer [primary key]
+  person_id integer [not null]
+  street varchar(200) [not null]
+  city varchar(100) [not null]
+  state varchar(100)
+  zip varchar(20)
+  country varchar(100)
+  type varchar(20) [note: 'home, work, etc.']
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+}
+
+Table user {
+  id integer [primary key]
+  person_id integer [unique, not null]
+  email varchar(254) [unique, not null]
+  username varchar(150) [unique, not null]
+  password varchar(128) [not null]
+  status varchar(20) [default: 'active', note: 'active, inactive, suspended']
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+}
+
+Table therapist {
+  id integer [primary key]
+  user_id integer [unique, not null]
+  resume text
+  onboard_date date [default: `now()`]
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+}
+
+Table client {
+  id integer [primary key]
+  person_id integer [unique, not null]
+  onboard_date date [default: `now()`]
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+}
+
+Table caregiver {
+  id integer [primary key]
+  user_id integer [unique, not null]
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+}
+
+// Schedule and Time Off Models
+Table therapist_schedule {
+  id integer [primary key]
+  therapist_id integer [not null]
+  day varchar(10) [not null, note: 'monday, tuesday, wednesday, thursday, friday, saturday, sunday']
+  start time [not null]
+  end time [not null]
+  status varchar(20) [default: 'active', note: 'active, inactive']
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+  
+  indexes {
+    (therapist_id, day, start, end) [unique]
+  }
+}
+
+Table therapist_time_off {
+  id integer [primary key]
+  therapist_id integer [not null]
+  date_start timestamp [not null]
+  date_end timestamp [not null]
+  status varchar(20) [default: 'pending', note: 'pending, approved, rejected, cancelled']
+  reason text
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+}
+
+// Relationship Tables
+Table client_therapist {
+  id integer [primary key]
+  therapist_id integer [not null]
+  client_id integer [not null]
+  status varchar(20) [default: 'active', note: 'active, inactive, completed']
+  assigned_date date [default: `now()`]
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+  
+  indexes {
+    (therapist_id, client_id) [unique]
+  }
+}
+
+Table caregiver_client {
+  id integer [primary key]
+  caregiver_id integer [not null]
+  client_id integer [not null]
+  status varchar(20) [default: 'active', note: 'active, inactive']
+  assigned_date date [default: `now()`]
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+  
+  indexes {
+    (caregiver_id, client_id) [unique]
+  }
+}
+
+// Financial and Insurance Models
+Table currency {
+  id integer [primary key]
+  name varchar(50) [unique, not null]
+  code varchar(3) [unique, not null, note: '3-letter currency code (e.g., USD, EUR, BOB)']
+  symbol varchar(5) [note: 'Currency symbol (e.g., $, €, Bs)']
+  is_active boolean [default: true]
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+}
+
+Table insurance {
+  id integer [primary key]
+  name varchar(200) [not null]
+  phone varchar(20) [note: 'Format: +999999999']
+  fax varchar(20) [note: 'Format: +999999999']
+  website varchar(200)
+  description text
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+}
+
+Table therapy {
+  id integer [primary key]
+  name varchar(200) [not null]
+  code varchar(20) [unique, not null, note: 'Unique therapy code for identification']
+  description text
+  is_active boolean [default: true]
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+}
+
+Table therapy_plan {
+  id integer [primary key]
+  therapy_id integer [not null]
+  name varchar(200) [not null, note: 'e.g., Individual Session, 10-Session Package, Monthly Plan']
+  description text
+  sessions_count integer [note: 'Number of sessions in this plan (null for single sessions)']
+  amount decimal(10,2) [not null, note: 'Base price for this plan']
+  currency_id integer [not null]
+  is_active boolean [default: true]
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+  
+  indexes {
+    (therapy_id, name) [unique, note: 'Each therapy can have unique plan names']
+  }
+}
+
+Table authorization {
+  id integer [primary key]
+  number varchar(50) [unique, not null, note: 'Authorization number from insurance']
+  client_id integer [not null]
+  therapy_id integer [not null]
+  insurance_id integer [not null]
+  status varchar(20) [default: 'pending', note: 'pending, approved, rejected, expired, suspended']
+  time_approved integer [not null, note: 'Total approved time in minutes']
+  max_time_day integer [note: 'Maximum time per day in minutes']
+  max_time_week integer [note: 'Maximum time per week in minutes']
+  max_time_month integer [note: 'Maximum time per month in minutes']
+  start_date date [not null, note: 'Authorization start date']
+  end_date date [not null, note: 'Authorization end date']
+  notes text
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+  
+  indexes {
+    (client_id, status) [name: 'idx_client_auth_status']
+    (start_date, end_date) [name: 'idx_auth_date_range']
+    (therapy_id) [name: 'idx_auth_therapy']
+    (status) [name: 'idx_auth_status']
+  }
+}
+
+Table therapist_therapy_plan {
+  id integer [primary key]
+  therapist_id integer [not null]
+  therapy_id integer [not null]
+  plan_id integer [not null]
+  status varchar(20) [default: 'active', note: 'active, inactive, pending_approval']
+  rate decimal(10,2) [not null, note: 'Therapist rate for this specific therapy plan']
+  rate_type varchar(20) [not null, note: 'fixed, percentage']
+  currency_id integer [not null]
+  effective_date date [default: `now()`, note: 'Date when this rate becomes effective']
+  notes text
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+  
+  indexes {
+    (therapist_id, therapy_id, plan_id) [unique, note: 'Each therapist can have only one rate per therapy plan']
+  }
+}
+
+Table authorization_usage {
+  id integer [primary key]
+  authorization_id integer [not null]
+  session_date timestamp [not null]
+  duration_minutes integer [not null]
+  therapist_id integer [not null]
+  notes text
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+}
+
+Table insurance_coverage {
+  id integer [primary key]
+  insurance_id integer [not null]
+  therapy_id integer [not null]
+  coverage_percentage decimal(5,2) [not null, note: 'Percentage of therapy cost covered (0-100)']
+  max_amount_per_session decimal(10,2) [note: 'Maximum amount covered per session']
+  currency_id integer [not null]
+  is_active boolean [default: true]
+  effective_date date [default: `now()`]
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+  
+  indexes {
+    (insurance_id, therapy_id) [unique]
+  }
+}
+
+Table appointment {
+  id integer [primary key]
+  client_id integer [not null]
+  therapist_id integer [not null]
+  plan_purchase_id integer [not null, note: 'Links to specific plan purchase']
+  authorization_id integer [not null]
+  appointment_date date [not null]
+  start_time time [not null]
+  end_time time [not null]
+  duration_minutes integer [not null]
+  status varchar(30) [default: 'scheduled', note: 'scheduled, completed, cancelled_by_client, cancelled_by_therapist, no_show']
+  payed boolean [default: false]
+  notes text
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+  
+  indexes {
+    (client_id, appointment_date) [name: 'idx_client_date']
+    (therapist_id, appointment_date) [name: 'idx_therapist_date']
+    (plan_purchase_id) [name: 'idx_plan_purchase']
+    (authorization_id) [name: 'idx_authorization']
+    (status) [name: 'idx_status']
+  }
+}
+
+Table payment {
+  id integer [primary key]
+  client_id integer [not null]
+  plan_purchase_id integer [not null, note: 'Links to specific plan purchase']
+  appointment_id integer [note: 'Only for individual plan sessions, null for multi-session plans']
+  amount decimal(10,2) [not null]
+  currency_id integer [not null]
+  payment_date date [not null]
+  payment_method varchar(50) [note: 'cash, card, transfer, check, etc.']
+  status varchar(20) [default: 'pending', note: 'pending, completed, refunded']
+  notes text
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+  
+  indexes {
+    (client_id, payment_date) [name: 'idx_client_payment_date']
+    (plan_purchase_id) [name: 'idx_plan_purchase_payment']
+    (status) [name: 'idx_payment_status']
+  }
+}
+
+// Plan Purchase Tracking - Each time a client buys a plan
+Table plan_purchase {
+  id integer [primary key]
+  client_id integer [not null]
+  plan_id integer [not null]
+  purchased_sessions integer [not null, note: 'Number of sessions purchased (from therapy_plan.sessions_count)']
+  purchase_date date [not null]
+  expiry_date date [note: 'When this purchase expires (optional)']
+  status varchar(20) [default: 'active', note: 'active, expired, refunded']
+  total_amount_paid decimal(10,2) [not null]
+  currency_id integer [not null]
+  notes text
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+  
+  indexes {
+    (client_id, status) [name: 'idx_client_purchase_status']
+    (plan_id) [name: 'idx_purchase_plan']
+    (purchase_date) [name: 'idx_purchase_date']
+    (expiry_date) [name: 'idx_purchase_expiry']
+  }
+}
+
+// Plan Usage Summary - Real-time tracking of session usage per purchase
+Table plan_usage_summary {
+  id integer [primary key]
+  plan_purchase_id integer [unique, not null]
+  sessions_used integer [default: 0]
+  sessions_remaining integer [not null]
+  last_session_date date [note: 'Date of last completed session']
+  last_updated timestamp [default: `now()`]
+  
+  indexes {
+    (plan_purchase_id) [unique]
+  }
+}
+
+// Authorization Usage Summary - Real-time tracking of authorization time usage
+Table authorization_usage_summary {
+  id integer [primary key]
+  authorization_id integer [unique, not null]
+  total_time_used_minutes integer [default: 0]
+  total_time_remaining_minutes integer [not null]
+  total_sessions_count integer [default: 0, note: 'Number of completed sessions']
+  last_session_date date [note: 'Date of last completed session']
+  last_updated timestamp [default: `now()`]
+  
+  indexes {
+    (authorization_id) [unique]
+  }
+}
+
+// Relationships
+// User and Person relationships
+Ref: user.person_id - person.id // one-to-one
+Ref: therapist.user_id - user.id // one-to-one
+Ref: client.person_id - person.id // one-to-one
+Ref: caregiver.user_id - user.id // one-to-one
+
+// Address relationship
+Ref: address.person_id > person.id // many-to-one
+
+// Schedule relationships
+Ref: therapist_schedule.therapist_id > user.id // many-to-one
+Ref: therapist_time_off.therapist_id > user.id // many-to-one
+
+// Client-Therapist relationships
+Ref: client_therapist.therapist_id > user.id // many-to-one
+Ref: client_therapist.client_id > client.id // many-to-one
+Ref: caregiver_client.caregiver_id > caregiver.id // many-to-one
+Ref: caregiver_client.client_id > client.id // many-to-one
+
+// Financial relationships
+Ref: therapy_plan.therapy_id > therapy.id // many-to-one
+Ref: therapy_plan.currency_id > currency.id // many-to-one
+Ref: therapist_therapy_plan.currency_id > currency.id // many-to-one
+Ref: insurance_coverage.currency_id > currency.id // many-to-one
+
+// Authorization relationships
+Ref: authorization.client_id > client.id // many-to-one
+Ref: authorization.therapy_id > therapy.id // many-to-one
+Ref: authorization.insurance_id > insurance.id // many-to-one
+
+// Therapist-Therapy-Plan relationships
+Ref: therapist_therapy_plan.therapist_id > user.id // many-to-one
+Ref: therapist_therapy_plan.therapy_id > therapy.id // many-to-one
+Ref: therapist_therapy_plan.plan_id > therapy_plan.id // many-to-one
+
+// Usage tracking relationships
+Ref: authorization_usage.authorization_id > authorization.id // many-to-one
+Ref: authorization_usage.therapist_id > user.id // many-to-one
+
+// Insurance coverage relationships
+Ref: insurance_coverage.insurance_id > insurance.id // many-to-one
+Ref: insurance_coverage.therapy_id > therapy.id // many-to-one
+
+// Appointment relationships
+Ref: appointment.client_id > client.id // many-to-one
+Ref: appointment.therapist_id > user.id // many-to-one (therapist)
+Ref: appointment.plan_purchase_id > plan_purchase.id // many-to-one
+Ref: appointment.authorization_id > authorization.id // many-to-one
+
+// Plan Purchase relationships
+Ref: plan_purchase.client_id > client.id // many-to-one
+Ref: plan_purchase.plan_id > therapy_plan.id // many-to-one
+Ref: plan_purchase.currency_id > currency.id // many-to-one
+
+// Plan Usage Summary relationships
+Ref: plan_usage_summary.plan_purchase_id - plan_purchase.id // one-to-one
+
+// Authorization Usage Summary relationships
+Ref: authorization_usage_summary.authorization_id - authorization.id // one-to-one
+
+// Payment relationships
+Ref: payment.client_id > client.id // many-to-one
+Ref: payment.plan_purchase_id > plan_purchase.id // many-to-one
+Ref: payment.appointment_id > appointment.id // many-to-one (optional, only for individual sessions)
+Ref: payment.currency_id > currency.id // many-to-one
+
+/* 
+PERFORMANCE OPTIMIZATION NOTES:
+
+1. EFFICIENT SESSION TRACKING:
+   - Instead of: COUNT(*) FROM appointment WHERE plan_id = ? AND status = 'completed'
+   - Use: SELECT sessions_remaining FROM plan_usage_summary WHERE plan_purchase_id = ?
+
+2. EFFICIENT AUTHORIZATION TRACKING:
+   - Instead of: SUM(duration_minutes) FROM appointment WHERE authorization_id = ?
+   - Use: SELECT total_time_remaining_minutes FROM authorization_usage_summary WHERE authorization_id = ?
+
+3. TRIGGER/APPLICATION LOGIC NEEDED:
+   - Update plan_usage_summary when appointment status changes to 'completed'
+   - Update authorization_usage_summary when appointment status changes to 'completed'
+   - Handle refunds and cancellations appropriately
+
+4. BUSINESS LOGIC EXAMPLES:
+   
+   Check if client can book appointment:
+   ```sql
+   SELECT 
+     pus.sessions_remaining > 0 as has_plan_sessions,
+     aus.total_time_remaining_minutes >= ? as has_auth_time
+   FROM plan_usage_summary pus
+   JOIN authorization_usage_summary aus ON appointment.authorization_id = aus.authorization_id
+   WHERE pus.plan_purchase_id = ?
+   ```
+   
+   Get client's active purchases with sessions remaining:
+   ```sql
+   SELECT pp.*, pus.sessions_remaining, tp.name as plan_name
+   FROM plan_purchase pp
+   JOIN plan_usage_summary pus ON pp.id = pus.plan_purchase_id
+   JOIN therapy_plan tp ON pp.plan_id = tp.id
+   WHERE pp.client_id = ? AND pp.status = 'active' AND pus.sessions_remaining > 0
+   ```
+*/
