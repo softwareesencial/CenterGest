@@ -11,6 +11,7 @@ interface Appointment {
   id: string;
   clientName: string;
   therapistName: string;
+  date: Date;         // Añadimos el campo date
   startTime: string;
   endTime: string;
   service: string;
@@ -32,6 +33,7 @@ const WeekView: React.FC<WeekViewProps> = ({ className = "" }) => {
       id: "1",
       clientName: "María González",
       therapistName: "Dr. Ana Rodríguez",
+      date: new Date(2025, 8, 23), // Año, mes (0-11), día
       startTime: "09:00",
       endTime: "10:00",
       service: "Fisioterapia",
@@ -43,6 +45,7 @@ const WeekView: React.FC<WeekViewProps> = ({ className = "" }) => {
       id: "2",
       clientName: "Carlos Mendoza",
       therapistName: "Dr. Luis Pérez",
+      date: new Date(2025, 8, 24), // Año, mes (0-11), día
       startTime: "10:30",
       endTime: "11:30",
       service: "Neurorehabilitación",
@@ -54,6 +57,7 @@ const WeekView: React.FC<WeekViewProps> = ({ className = "" }) => {
       id: "3",
       clientName: "Ana Herrera",
       therapistName: "Dr. Ana Rodríguez",
+      date: new Date(2025, 8, 25), // Año, mes (0-11), día
       startTime: "14:00",
       endTime: "15:00",
       service: "Terapia Ocupacional",
@@ -65,6 +69,7 @@ const WeekView: React.FC<WeekViewProps> = ({ className = "" }) => {
       id: "4",
       clientName: "Roberto Silva",
       therapistName: "Dr. Carmen López",
+      date: new Date(2025, 8, 26), // Año, mes (0-11), día
       startTime: "11:00",
       endTime: "12:00",
       service: "Psicoterapia",
@@ -76,6 +81,43 @@ const WeekView: React.FC<WeekViewProps> = ({ className = "" }) => {
       id: "5",
       clientName: "Sofía Vargas",
       therapistName: "Dr. Luis Pérez",
+      date: new Date(2025, 8, 27), // Año, mes (0-11), día
+      startTime: "16:00",
+      endTime: "17:00",
+      service: "Fisioterapia",
+      status: "confirmed",
+      room: "Sala 2",
+      phone: "+591-654-3210",
+    },
+    {
+      id: "6",
+      clientName: "Sofía Vargas",
+      therapistName: "Dr. Luis Pérez",
+      date: new Date(2025, 8, 28), // Año, mes (0-11), día
+      startTime: "16:00",
+      endTime: "17:00",
+      service: "Fisioterapia",
+      status: "confirmed",
+      room: "Sala 2",
+      phone: "+591-654-3210",
+    },
+    {
+      id: "7",
+      clientName: "Sofía Vargas",
+      therapistName: "Dr. Luis Pérez",
+      date: new Date(2025, 8, 28), // Año, mes (0-11), día
+      startTime: "16:00",
+      endTime: "17:00",
+      service: "Fisioterapia",
+      status: "confirmed",
+      room: "Sala 2",
+      phone: "+591-654-3210",
+    },
+    {
+      id: "8",
+      clientName: "Sofía Vargas",
+      therapistName: "Dr. Luis Pérez",
+      date: new Date(2025, 8, 28), // Año, mes (0-11), día
       startTime: "16:00",
       endTime: "17:00",
       service: "Fisioterapia",
@@ -137,9 +179,13 @@ const WeekView: React.FC<WeekViewProps> = ({ className = "" }) => {
   };
 
   const getAppointmentsForDay = (date: Date) => {
-    // For demo purposes, randomly assign appointments to different days
-    const dayIndex = date.getDay();
-    return mockAppointments.filter((_, index) => (index + dayIndex) % 7 < 2);
+    return mockAppointments.filter(appointment => {
+      return (
+        appointment.date.getFullYear() === date.getFullYear() &&
+        appointment.date.getMonth() === date.getMonth() &&
+        appointment.date.getDate() === date.getDate()
+      );
+    });
   };
 
   return (
