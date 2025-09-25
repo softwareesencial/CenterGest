@@ -7,6 +7,7 @@ import React, {
   type ReactNode,
 } from "react";
 import { loginService } from "../pages/LoginPage/services/LoginService";
+import { useSupabase } from "../../lib/supabase/SupabaseProvider";
 
 // Types
 export interface User {
@@ -72,6 +73,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
   children,
   config: userConfig = {},
 }) => {
+  const { supabase } = useSupabase();
+
   const config = { ...defaultConfig, ...userConfig };
 
   const [authState, setAuthState] = useState<AuthState>({
@@ -82,50 +85,50 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
     error: null,
   });
 
-  // Initialize auth state from localStorage
+  // Initialize auth state from localStorage and Supabase session
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        const storedToken = localStorage.getItem(config.tokenStorageKey!);
-        const storedUser = localStorage.getItem(config.userStorageKey!);
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) throw error;
 
-        if (storedToken && storedUser) {
-          const userData = JSON.parse(storedUser);
+        if (session) {
+          const { data: userData, error: userError } = await supabase
+            .from('user')
+            .select(`
+              *,
+              person:person_id (*)
+            `)
+            .single();
 
-          // Verify token is still valid
-          const isValid = await loginService.verifyToken(storedToken);
+          if (userError) throw userError;
 
-          if (isValid) {
-            setAuthState({
-              user: userData,
-              token: storedToken,
-              isAuthenticated: true,
-              isLoading: false,
-              error: null,
-            });
-
-            // Set up auto refresh if enabled
-            if (config.autoRefreshToken) {
-              setupTokenRefresh();
-            }
-          } else {
-            // Token is invalid, clear storage
-            localStorage.removeItem(config.tokenStorageKey!);
-            localStorage.removeItem(config.userStorageKey!);
-            setAuthState((prev) => ({ ...prev, isLoading: false }));
-          }
+          setAuthState({
+            user: {
+              id: userData.id,
+              email: userData.email,
+              name: `${userData.person.name} ${userData.person.lastname}`,
+              role: userData.role,
+              ...userData
+            },
+            token: session.access_token,
+            isAuthenticated: true,
+            isLoading: false,
+            error: null,
+          });
         } else {
-          setAuthState((prev) => ({ ...prev, isLoading: false }));
+          setAuthState(prev => ({ ...prev, isLoading: false }));
         }
       } catch (error) {
-        console.error("Auth initialization error:", error);
-        setAuthState((prev) => ({ ...prev, isLoading: false }));
+        console.error('Auth initialization error:', error);
+        setAuthState(prev => ({ ...prev, isLoading: false }));
       }
     };
 
     initializeAuth();
-  }, []);
-
+  }, [supabase]);
+  
   // Set up automatic token refresh
   const setupTokenRefresh = () => {
     const interval = setInterval(async () => {

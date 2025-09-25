@@ -1,37 +1,45 @@
 import { useState } from 'react';
 import { X } from 'lucide-react';
+import { TherapistService } from '../services/TherapistService';
 
 interface TherapistFormProps {
   onClose: () => void;
 }
 
 interface FormData {
-  name: string;
-  lastname: string;
-  email: string;
+  person: {
+    name: string;
+    lastname: string;
+    birthdate: string;
+  };
+  user: {
+    email: string;
+    username: string;
+    password: string;
+  };
+  resume?: string;
 }
 
 export const TherapistForm = ({ onClose }: TherapistFormProps) => {
   const [formData, setFormData] = useState<FormData>({
-    name: '',
-    lastname: '',
-    email: '',
+    person: {
+      name: '',
+      lastname: '',
+      birthdate: '',
+    },
+    user: {
+      email: '',
+      username: '',
+      password: '',
+    },
+    resume: ''
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch('/api/therapists', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (response.ok) {
-        onClose();
-      }
+      await TherapistService.createTherapist(formData);
+      onClose();
     } catch (error) {
       console.error('Error creating therapist:', error);
     }
@@ -59,8 +67,8 @@ export const TherapistForm = ({ onClose }: TherapistFormProps) => {
             type="text"
             required
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            value={formData.person.name}
+            onChange={(e) => setFormData({ ...formData, person: { ...formData.person, name: e.target.value } })}
           />
         </div>
 
@@ -72,8 +80,8 @@ export const TherapistForm = ({ onClose }: TherapistFormProps) => {
             type="text"
             required
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-            value={formData.lastname}
-            onChange={(e) => setFormData({ ...formData, lastname: e.target.value })}
+            value={formData.person.lastname}
+            onChange={(e) => setFormData({ ...formData, person: { ...formData.person, lastname: e.target.value } })}
           />
         </div>
 
@@ -85,8 +93,8 @@ export const TherapistForm = ({ onClose }: TherapistFormProps) => {
             type="email"
             required
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-            value={formData.email}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            value={formData.user.email}
+            onChange={(e) => setFormData({ ...formData, user: { ...formData.user, email: e.target.value } })}
           />
         </div>
       </div>

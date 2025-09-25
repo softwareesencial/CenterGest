@@ -140,6 +140,32 @@ class LoginService {
       };
     }
   }
+
+  async refreshToken(currentToken: string): Promise<RefreshTokenResponse> {
+    try {
+      const { data, error } = await supabase.auth.refreshSession();
+
+      if (error) {
+        return {
+          success: false,
+          message: error.message,
+        };
+      }
+
+      return {
+        success: true,
+        data: {
+          token: data.session?.access_token ?? "",
+          expiresIn: data.session?.expires_in,
+        },
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        message: error.message || "Error refreshing token",
+      };
+    }
+  }
 }
 
 // Create and export a singleton instance
