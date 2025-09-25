@@ -6,6 +6,7 @@ import {
   MapPin,
   Plus,
 } from "lucide-react";
+import NewAppointmentModal from "./NewAppointmentModal";
 
 interface Appointment {
   id: string;
@@ -26,6 +27,9 @@ interface WeekViewProps {
 
 const WeekView: React.FC<WeekViewProps> = ({ className = "" }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
+  const [selectedTime, setSelectedTime] = useState<string | undefined>();
 
   // Mock appointment data
   const mockAppointments: Appointment[] = [
@@ -188,6 +192,18 @@ const WeekView: React.FC<WeekViewProps> = ({ className = "" }) => {
     });
   };
 
+  const handleNewAppointment = (appointment: Omit<Appointment, "id">) => {
+    // Aquí implementarías la lógica para guardar la nueva cita
+    console.log("Nueva cita:", appointment);
+    // TODO: Integrar con el backend
+  };
+
+  const handleSlotClick = (date: Date, time: string) => {
+    setSelectedDate(date);
+    setSelectedTime(time);
+    setIsModalOpen(true);
+  };
+
   return (
     <div className={`bg-white rounded-lg shadow-lg ${className}`}>
       {/* Header */}
@@ -320,7 +336,10 @@ const WeekView: React.FC<WeekViewProps> = ({ className = "" }) => {
 
                       {/* Empty slot - clickable for new appointment */}
                       {timeAppointments.length === 0 && (
-                        <div className="h-full min-h-[80px] rounded-lg border-2 border-dashed border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-colors duration-200 flex items-center justify-center opacity-0 hover:opacity-100 cursor-pointer">
+                        <div
+                          onClick={() => handleSlotClick(date, time)}
+                          className="h-full min-h-[80px] rounded-lg border-2 border-dashed border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-colors duration-200 flex items-center justify-center opacity-0 hover:opacity-100 cursor-pointer"
+                        >
                           <Plus className="w-4 h-4 text-gray-400" />
                         </div>
                       )}
@@ -354,6 +373,15 @@ const WeekView: React.FC<WeekViewProps> = ({ className = "" }) => {
           </div>
         </div>
       </div>
+
+      {/* New Appointment Modal */}
+      <NewAppointmentModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSave={handleNewAppointment}
+        selectedDate={selectedDate}
+        selectedTime={selectedTime}
+      />
     </div>
   );
 };
