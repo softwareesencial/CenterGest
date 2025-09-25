@@ -3,6 +3,14 @@ import React, { useState, useEffect } from "react";
 import { Eye, EyeOff, Mail, Lock, AlertCircle, Loader2 } from "lucide-react";
 import { useAuth } from "../../auth/AuthProvider";
 import { useNavigate } from "react-router-dom";
+import { createClient } from '@supabase/supabase-js'
+
+console.log("VITE_SUPABASE_URL:", import.meta.env.VITE_SUPABASE_URL);
+
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL!,
+  import.meta.env.VITE_SUPABASE_ANON_KEY!
+)
 
 // Configuration interface for easy customization
 export interface LoginPageConfig {
@@ -155,13 +163,20 @@ const LoginPage: React.FC<LoginPageProps> = ({
     setIsSubmitting(true);
 
     try {
-      const success = await login(formData.email, formData.password);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password,
+      })
 
-      if (success) {
-        navigate('/')
-      } else {
-        config.onLoginError?.(error || "Login failed");
-        console.error("Login failed:", error);
+      if (error) {
+        throw error;
+      }
+
+      if (data.user) {
+        const success = await login(formData.email, formData.password);
+        if (success) {
+          navigate('/');
+        }
       }
     } catch (err: any) {
       console.error("Login error:", err);
