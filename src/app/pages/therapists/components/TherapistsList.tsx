@@ -1,23 +1,38 @@
 import { useEffect, useState } from 'react';
 import { Edit2 } from 'lucide-react';
+import { TherapistService } from '../services/TherapistService';
 import type { Therapist } from '../TherapistsPage';
 
 export const TherapistsList = () => {
   const [therapists, setTherapists] = useState<Therapist[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchTherapists = async () => {
       try {
-        const response = await fetch('/api/therapists');
-        const data = await response.json();
+        setLoading(true);
+        setError(null);
+        const data = await TherapistService.getTherapists();
         setTherapists(data);
-      } catch (error) {
-        console.error('Error fetching therapists:', error);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Error fetching therapists');
+        console.error('Error fetching therapists:', err);
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchTherapists();
   }, []);
+
+  if (loading) {
+    return <div className="text-center p-4">Cargando...</div>;
+  }
+
+  if (error) {
+    return <div className="text-red-600 text-center p-4">{error}</div>;
+  }
 
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -36,13 +51,13 @@ export const TherapistsList = () => {
             {therapists.map((therapist) => (
               <tr key={therapist.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap">
-                  {`${therapist.user.person.name} ${therapist.user.person.lastname}`}
+                  {`${therapist.app_user.person.name} ${therapist.app_user.person.lastname}`}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  {therapist.user.email}
+                  {therapist.app_user.email}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  {therapist.user.username}
+                  {therapist.app_user.username}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   {new Date(therapist.onboard_date).toLocaleDateString()}

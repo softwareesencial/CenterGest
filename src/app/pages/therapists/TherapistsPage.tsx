@@ -5,17 +5,26 @@ import { TherapistsList } from './components/TherapistsList';
 
 export interface Therapist {
   id: number;
-  user: {
+  resume: string | null;
+  onboard_date: string;
+  created_at: string;
+  updated_at: string;
+  app_user: {
+    id: number;
+    email: string;
+    username: string;
+    status: 'active' | 'inactive' | 'suspended';
+    created_at: string;
+    updated_at: string;
     person: {
+      id: number;
       name: string;
       lastname: string;
       birthdate: string;
+      created_at: string;
+      updated_at: string;
     };
-    email: string;
-    username: string;
   };
-  resume: string;
-  onboard_date: string;
 }
 
 export const TherapistsPage = () => {
