@@ -1,37 +1,29 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Edit2 } from 'lucide-react';
 import { TherapistService } from '../services/TherapistService';
 import type { Therapist } from '../TherapistsPage';
 
-export const TherapistsList = () => {
-  const [therapists, setTherapists] = useState<Therapist[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+interface TherapistsListProps {
+  therapists: Therapist[];
+  setTherapists: React.Dispatch<React.SetStateAction<Therapist[]>>;
+}
 
+export const TherapistsList = ({ therapists, setTherapists }: TherapistsListProps) => {
   useEffect(() => {
     const fetchTherapists = async () => {
       try {
-        setLoading(true);
-        setError(null);
         const data = await TherapistService.getTherapists();
         setTherapists(data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Error fetching therapists');
         console.error('Error fetching therapists:', err);
-      } finally {
-        setLoading(false);
       }
     };
 
     fetchTherapists();
-  }, []);
+  }, [setTherapists]);
 
-  if (loading) {
-    return <div className="text-center p-4">Cargando...</div>;
-  }
-
-  if (error) {
-    return <div className="text-red-600 text-center p-4">{error}</div>;
+  if (therapists.length === 0) {
+    return <div className="text-center p-4">No hay terapeutas disponibles</div>;
   }
 
   return (
@@ -42,7 +34,6 @@ export const TherapistsList = () => {
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Correo</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Usuario</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha de Ingreso</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
             </tr>
@@ -55,9 +46,6 @@ export const TherapistsList = () => {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   {therapist.app_user.email}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  {therapist.app_user.username}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   {new Date(therapist.onboard_date).toLocaleDateString()}

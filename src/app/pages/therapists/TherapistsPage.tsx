@@ -29,9 +29,15 @@ export interface Therapist {
 
 export const TherapistsPage = () => {
   const [open, setOpen] = useState(false);
+  const [therapists, setTherapists] = useState<Therapist[]>([]);
 
   const handleClose = () => {
     setOpen(false);
+  };
+
+  const handleTherapistCreated = (newTherapist: Therapist) => {
+    setTherapists(prev => [...prev, newTherapist]);
+    handleClose();
   };
 
   return (
@@ -51,12 +57,12 @@ export const TherapistsPage = () => {
         </div>
       </div>
 
-      <TherapistsList />
+      <TherapistsList therapists={therapists} setTherapists={setTherapists} />
 
       {open && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
           <div className="bg-white rounded-lg w-full max-w-2xl mx-4">
-            <TherapistForm onClose={handleClose} />
+            <TherapistForm onClose={handleClose} onSuccess={handleTherapistCreated} />
           </div>
         </div>
       )}

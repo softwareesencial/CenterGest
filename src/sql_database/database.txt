@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS person (
   id SERIAL PRIMARY KEY,
   name VARCHAR(100) NOT NULL,
   lastname VARCHAR(100) NOT NULL,
-  birthdate DATE NOT NULL,
+  birthdate DATE,
   created_at TIMESTAMP DEFAULT now(),
   updated_at TIMESTAMP DEFAULT now()
 );
@@ -230,7 +230,6 @@ CREATE TABLE IF NOT EXISTS appointment (
   created_at TIMESTAMP DEFAULT now(),
   updated_at TIMESTAMP DEFAULT now()
 );
-
 CREATE TABLE IF NOT EXISTS plan_purchase (
   id SERIAL PRIMARY KEY,
   client_id INTEGER NOT NULL REFERENCES client(id),
