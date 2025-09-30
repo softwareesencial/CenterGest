@@ -1,11 +1,12 @@
 import { supabase } from '../../../../lib/supabase';
 import type { Therapist } from '../TherapistsPage';
 
+// 1. Actualizar la interfaz para hacer birthdate nullable
 interface PersonResponse {
   id: number;
   name: string;
   lastname: string;
-  birthdate: string;
+  birthdate: string | null;  // Hacer nullable
   created_at: string;
   updated_at: string;
 }
@@ -67,7 +68,7 @@ export class TherapistService {
     person: {
       name: string;
       lastname: string;
-      birthdate: string;
+      birthdate: string | null;  // Hacer nullable aquí también
     };
     user: {
       email: string;
@@ -82,7 +83,7 @@ export class TherapistService {
       .insert({
         name: data.person.name,
         lastname: data.person.lastname,
-        birthdate: data.person.birthdate
+        birthdate: data.person.birthdate === "" ? null : data.person.birthdate  // Convertir string vacío a null
       })
       .select()
       .single<PersonResponse>();

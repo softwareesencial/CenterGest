@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { X } from 'lucide-react';
 import { TherapistService } from '../services/TherapistService';
+import type { Therapist } from '../TherapistsPage';
 
 interface TherapistFormProps {
   onClose: () => void;
+  onSuccess: (therapist: Therapist) => void;
 }
 
 interface FormData {
@@ -20,7 +22,7 @@ interface FormData {
   resume?: string;
 }
 
-export const TherapistForm = ({ onClose }: TherapistFormProps) => {
+export const TherapistForm = ({ onClose, onSuccess }: TherapistFormProps) => {
   const [formData, setFormData] = useState<FormData>({
     person: {
       name: '',
@@ -38,8 +40,8 @@ export const TherapistForm = ({ onClose }: TherapistFormProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await TherapistService.createTherapist(formData);
-      onClose();
+      const newTherapist = await TherapistService.createTherapist(formData);
+      onSuccess(newTherapist);
     } catch (error) {
       console.error('Error creating therapist:', error);
     }
