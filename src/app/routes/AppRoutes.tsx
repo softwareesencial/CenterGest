@@ -6,6 +6,7 @@ import ClientsPage from "../pages/ClientsPage/ClientsPage";
 import { TherapistsPage } from "../pages/therapists/TherapistsPage";
 import { ReportsPage } from "../pages/Reports/ReportPage";
 import LoginPage from "../pages/LoginPage/LoginPage";
+import { TherapistDetailsPage } from "../pages/therapists/pages/TherapistDetailsPage";
 
 export const AppRoutes = () => {
   return (
@@ -39,6 +40,14 @@ export const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <TherapistsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/therapists/:id"
+        element={
+          <ProtectedRoute>
+            <TherapistDetailsPage />
           </ProtectedRoute>
         }
       />

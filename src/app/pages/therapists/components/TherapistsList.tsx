@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { Edit2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { TherapistService } from '../services/TherapistService';
 import type { Therapist } from '../TherapistsPage';
 
@@ -9,6 +10,8 @@ interface TherapistsListProps {
 }
 
 export const TherapistsList = ({ therapists, setTherapists }: TherapistsListProps) => {
+  const navigate = useNavigate();
+
   useEffect(() => {
     const fetchTherapists = async () => {
       try {
@@ -21,6 +24,10 @@ export const TherapistsList = ({ therapists, setTherapists }: TherapistsListProp
 
     fetchTherapists();
   }, [setTherapists]);
+
+  const handleRowClick = (therapist: Therapist) => {
+    navigate(`/therapists/${therapist.public_id}`);
+  };
 
   if (therapists.length === 0) {
     return <div className="text-center p-4">No hay terapeutas disponibles</div>;
@@ -40,7 +47,11 @@ export const TherapistsList = ({ therapists, setTherapists }: TherapistsListProp
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {therapists.map((therapist) => (
-              <tr key={therapist.id} className="hover:bg-gray-50">
+              <tr 
+                key={therapist.id} 
+                className="hover:bg-gray-50 cursor-pointer"
+                onClick={() => handleRowClick(therapist)}
+              >
                 <td className="px-6 py-4 whitespace-nowrap">
                   {`${therapist.app_user.person.name} ${therapist.app_user.person.lastname}`}
                 </td>
