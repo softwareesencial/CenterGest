@@ -5,6 +5,7 @@ import { TherapistsList } from './components/TherapistsList';
 
 export interface Therapist {
   id: number;
+  public_id: string;
   resume: string | null;
   onboard_date: string;
   created_at: string;

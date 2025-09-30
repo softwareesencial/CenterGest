@@ -37,6 +37,7 @@ export class TherapistService {
       .from('therapist')
       .select(`
         id,
+        public_id,
         resume,
         onboard_date,
         created_at,
@@ -147,5 +148,95 @@ export class TherapistService {
     }
 
     return therapist;
+  }
+
+  // Add this method to the TherapistService class
+  static async getTherapistById(id: string): Promise<Therapist> {
+    const { data, error } = await supabase
+      .from('therapist')
+      .select(`
+        id,
+        public_id,
+        resume,
+        onboard_date,
+        created_at,
+        updated_at,
+        app_user:user_id (
+          id,
+          email,
+          username,
+          status,
+          created_at,
+          updated_at,
+          person:person_id (
+            id,
+            name,
+            lastname,
+            birthdate,
+            created_at,
+            updated_at
+          )
+        )
+      `)
+      .eq('public_id', id)
+      .single<Therapist>();
+
+    if (error) throw new Error(`Error fetching therapist: ${error.message}`);
+    if (!data) throw new Error('Therapist not found');
+    
+    return data;
+  }
+
+  static async updateTherapist(therapist: Therapist): Promise<Therapist> {
+    const { data: personData, error: personError } = await supabase
+      .from('person')
+      .update({
+        name: therapist.app_user.person.name,
+        lastname: therapist.app_user.person.lastname,
+        birthdate: therapist.app_user.person.birthdate,
+      })
+      .eq('id', therapist.app_user.person.id)
+      .select()
+      .single();
+
+    if (personError) throw personError;
+
+    const { data: userData, error: userError } = await supabase
+      .from('app_user')
+      .update({
+        email: therapist.app_user.email,
+        username: therapist.app_user.username,
+        status: therapist.app_user.status,
+      })
+      .eq('id', therapist.app_user.id)
+      .select()
+      .single();
+
+    if (userError) throw userError;
+
+    const { data: therapistData, error: therapistError } = await supabase
+      .from('therapist')
+      .update({
+        resume: therapist.resume,
+        onboard_date: therapist.onboard_date,
+      })
+      .eq('id', therapist.id)
+      .select()
+      .single();
+
+    if (therapistError) throw therapistError;
+
+    return {
+      ...therapist,
+      ...therapistData,
+      app_user: {
+        ...therapist.app_user,
+        ...userData,
+        person: {
+          ...therapist.app_user.person,
+          ...personData,
+        }
+      }
+    };
   }
 }
