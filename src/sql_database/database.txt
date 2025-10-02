@@ -42,9 +42,13 @@ CREATE TABLE IF NOT EXISTS therapist (
   user_id INTEGER UNIQUE NOT NULL REFERENCES app_user(id),
   resume TEXT,
   onboard_date DATE DEFAULT now(),
+  public_id UUID DEFAULT gen_random_uuid(),
   created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now()
+  updated_at TIMESTAMP DEFAULT now(),
+  CONSTRAINT therapist_public_id_uniq UNIQUE (public_id)
 );
+
+CREATE INDEX idx_therapist_public_id ON therapist(public_id);
 
 CREATE TABLE IF NOT EXISTS client (
   id SERIAL PRIMARY KEY,
@@ -214,22 +218,6 @@ CREATE TABLE IF NOT EXISTS insurance_coverage (
   UNIQUE (insurance_id, therapy_id)
 );
 
-CREATE TABLE IF NOT EXISTS appointment (
-  id SERIAL PRIMARY KEY,
-  client_id INTEGER NOT NULL REFERENCES client(id),
-  therapist_id INTEGER NOT NULL REFERENCES therapist(id),
-  plan_purchase_id INTEGER NOT NULL,
-  authorization_id INTEGER NOT NULL REFERENCES auth_authorization(id),
-  appointment_date DATE NOT NULL,
-  start_time TIME NOT NULL,
-  end_time TIME NOT NULL,
-  duration_minutes INTEGER NOT NULL,
-  status VARCHAR(30) DEFAULT 'scheduled',
-  payed BOOLEAN DEFAULT FALSE,
-  notes TEXT,
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now()
-);
 CREATE TABLE IF NOT EXISTS plan_purchase (
   id SERIAL PRIMARY KEY,
   client_id INTEGER NOT NULL REFERENCES client(id),
@@ -240,6 +228,23 @@ CREATE TABLE IF NOT EXISTS plan_purchase (
   status VARCHAR(20) DEFAULT 'active',
   total_amount_paid DECIMAL(10,2) NOT NULL,
   currency_id INTEGER NOT NULL REFERENCES currency(id),
+  notes TEXT,
+  created_at TIMESTAMP DEFAULT now(),
+  updated_at TIMESTAMP DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS appointment (
+  id SERIAL PRIMARY KEY,
+  client_id INTEGER NOT NULL REFERENCES client(id),
+  therapist_id INTEGER NOT NULL REFERENCES therapist(id),
+  plan_purchase_id INTEGER NOT NULL REFERENCES plan_purchase(id),
+  authorization_id INTEGER NOT NULL REFERENCES auth_authorization(id),
+  appointment_date DATE NOT NULL,
+  start_time TIME NOT NULL,
+  end_time TIME NOT NULL,
+  duration_minutes INTEGER NOT NULL,
+  status VARCHAR(30) DEFAULT 'scheduled',
+  payed BOOLEAN DEFAULT FALSE,
   notes TEXT,
   created_at TIMESTAMP DEFAULT now(),
   updated_at TIMESTAMP DEFAULT now()
