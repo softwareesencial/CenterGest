@@ -23,3 +23,6 @@ dist-ssr
 *.sln
 *.sw?
 *.history
+
+# AI Context
+PROJECT_CONTEX.md

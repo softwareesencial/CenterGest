@@ -1,7 +1,15 @@
 export interface Client {
-    id: string | number;
+  id: number;
+  public_id: string;
+  person: {
+    id: number;
     name: string;
-    age: number;
-    therapies: string[];
-    balance: number;
+    lastname: string;
+    birthdate: string | null;
+    created_at: string;
+    updated_at: string;
+  };
+  onboard_date: string;
+  created_at: string;
+  updated_at: string;
 }
