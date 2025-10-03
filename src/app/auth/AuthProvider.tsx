@@ -6,7 +6,7 @@ import React, {
   useEffect,
   type ReactNode,
 } from "react";
-import { loginService } from "../pages/LoginPage/services/LoginService";
+import { loginService } from "../features/LoginPage/services/LoginService";
 import { useSupabase } from "../../lib/supabase/SupabaseProvider";
 
 // Types

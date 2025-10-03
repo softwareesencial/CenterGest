@@ -1,12 +1,12 @@
 import { Route, Routes } from "react-router-dom";
 import { ProtectedRoute } from "./ProtectedRoutes";
-import { HomePage } from "../pages/HomePage/HomePage";
-import { CalendarPage } from "../pages/CalendarPage/CalendarPage";
-import ClientsPage from "../pages/ClientsPage/ClientsPage";
-import { TherapistsPage } from "../pages/therapists/TherapistsPage";
-import { ReportsPage } from "../pages/Reports/ReportPage";
-import LoginPage from "../pages/LoginPage/LoginPage";
-import { TherapistDetailsPage } from "../pages/therapists/pages/TherapistDetailsPage";
+import { HomePage } from "../features/HomePage/HomePage";
+import { CalendarPage } from "../features/CalendarPage/CalendarPage";
+import ClientsPage from "../features/ClientsPage/ClientsPage";
+import { TherapistsPage } from "../features/therapists/TherapistsPage";
+import { ReportsPage } from "../features/Reports/ReportPage";
+import LoginPage from "../features/LoginPage/LoginPage";
+import { TherapistDetailsPage } from "../features/therapists/pages/TherapistDetailsPage";
 
 export const AppRoutes = () => {
   return (
