@@ -55,13 +55,13 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({
           >
             <Edit className="w-5 h-5" />
           </button>
-          <button
+          {/* <button
             onClick={() => onDelete?.(service.id)}
             className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors duration-200"
             aria-label="Eliminar servicio"
           >
             <Trash2 className="w-5 h-5" />
-          </button>
+          </button> */}
         </div>
       </div>
     </div>
