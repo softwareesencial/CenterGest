@@ -1,24 +1,28 @@
-import { useEffect, useState } from 'react';
-import { Search, Plus } from 'lucide-react';
-import { ClientService } from './services/ClientService';
-import { Pagination } from './components/Pagination';
-import { CreateClientModal } from './components/CreateClientModal';
-import type { Client } from './types/Client';
+import { useEffect, useState } from "react";
+import { Search } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { ClientService } from "./services/ClientService";
+import { Pagination } from "./components/Pagination";
+import type { Client } from "./types/Client";
 
 const ITEMS_PER_PAGE = 10;
 
 export const ClientsPage = () => {
+  const navigate = useNavigate();
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
-  const [search, setSearch] = useState('');
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [search, setSearch] = useState("");
 
   const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
 
+  useEffect(() => {
+    fetchClients();
+  }, [currentPage, search]);
+
   /**
-   * Fetches clients from the database
+   * Fetches the list of clients with pagination and search
    */
   const fetchClients = async () => {
     try {
@@ -31,23 +35,18 @@ export const ClientsPage = () => {
       setClients(data);
       setTotalItems(count);
     } catch (error) {
-      console.error('Error fetching clients:', error);
+      console.error("Error fetching clients:", error);
+      alert("Error al cargar los clientes");
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchClients();
-  }, [currentPage, search]);
-
   /**
-   * Handles successful client creation
+   * Handles row click to navigate to edit page
    */
-  const HandleClientCreated = () => {
-    // Reset to page 1 and refresh the list
-    setCurrentPage(1);
-    fetchClients();
+  const handleRowClick = (publicId: string) => {
+    navigate(`/clients/${publicId}/edit`);
   };
 
   return (
@@ -55,27 +54,18 @@ export const ClientsPage = () => {
       <div className="bg-white rounded-lg shadow mb-6 p-4">
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-semibold">Gestión de Clientes</h1>
-          <div className="flex gap-3 items-center">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Buscar clientes..."
-                value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
-                  setCurrentPage(1); // Reset to first page on search
-                }}
-                className="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-              />
-              <Search className="absolute left-3 top-2.5 text-gray-400" size={20} />
-            </div>
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-            >
-              <Plus size={20} />
-              Crear Cliente
-            </button>
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Buscar clientes..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+            />
+            <Search
+              className="absolute left-3 top-2.5 text-gray-400"
+              size={20}
+            />
           </div>
         </div>
       </div>
@@ -83,10 +73,6 @@ export const ClientsPage = () => {
       <div className="bg-white rounded-lg shadow overflow-hidden">
         {loading ? (
           <div className="p-4 text-center">Loading...</div>
-        ) : clients.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">
-            {search ? 'No se encontraron clientes con ese criterio de búsqueda.' : 'No hay clientes registrados.'}
-          </div>
         ) : (
           <>
             <table className="min-w-full divide-y divide-gray-200">
@@ -108,12 +94,30 @@ export const ClientsPage = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {clients.map((client) => (
-                  <tr key={client.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">{client.person.name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{client.person.lastname}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{client.onboard_date}</td>
+                  <tr
+                    key={client.public_id}
+                    className="hover:bg-gray-50 cursor-pointer"
+                    onClick={() => handleRowClick(client.public_id)}
+                  >
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <button className="text-blue-600 hover:text-blue-900">Ver detalles</button>
+                      {client.person.name}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {client.person.lastname}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {new Date(client.onboard_date).toLocaleDateString()}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <button
+                        className="text-blue-600 hover:text-blue-900"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRowClick(client.public_id);
+                        }}
+                      >
+                        Ver detalles
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -128,12 +132,6 @@ export const ClientsPage = () => {
           </>
         )}
       </div>
-
-      <CreateClientModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onClientCreated={HandleClientCreated}
-      />
     </div>
   );
 };

@@ -54,9 +54,13 @@ CREATE TABLE IF NOT EXISTS client (
   id SERIAL PRIMARY KEY,
   person_id INTEGER UNIQUE NOT NULL REFERENCES person(id),
   onboard_date DATE DEFAULT now(),
+  public_id UUID DEFAULT gen_random_uuid(),
   created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now()
+  updated_at TIMESTAMP DEFAULT now(),
+  CONSTRAINT client_public_id_uniq UNIQUE (public_id)
 );
+
+CREATE INDEX idx_client_public_id ON client(public_id);
 
 CREATE TABLE IF NOT EXISTS caregiver (
   id SERIAL PRIMARY KEY,
