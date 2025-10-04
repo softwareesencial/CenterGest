@@ -8,6 +8,7 @@ import { ReportsPage } from "../features/Reports/ReportPage";
 import LoginPage from "../features/LoginPage/LoginPage";
 import { TherapistDetailsPage } from "../features/therapists/pages/TherapistDetailsPage";
 import { ClientEditPage } from "../features/ClientsPage/ClientsDetailsPage/ClientEditPage";
+import { ServicesPage } from "../features/SericesPage/ServicesPage";
 
 export const AppRoutes = () => {
   return (
@@ -58,6 +59,14 @@ export const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <TherapistDetailsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/services/"
+        element={
+          <ProtectedRoute>
+            <ServicesPage />
           </ProtectedRoute>
         }
       />

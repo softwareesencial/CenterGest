@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { HomeIcon, Calendar, User, File, Menu, X } from "lucide-react";
+import { HomeIcon, Calendar, User, File, Menu, X, Notebook } from "lucide-react";
 import { Link } from "react-router-dom"; // Assuming you're using React Router
 
 interface NavbarProps {
@@ -31,6 +31,11 @@ export const Navbar: React.FC<NavbarProps> = ({
       name: "Terapistas",
       path: "/therapists",
       icon: <User className="w-5 h-5" />,
+    },
+    {
+      name: "Servicios",
+      path: "/services",
+      icon: <Notebook className="size-5"/>,
     },
     { name: "Reportes", path: "/reports", icon: <File className="w-5 h-5" /> },
   ];
