@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   ChevronLeft,
   ChevronRight,
@@ -6,165 +6,38 @@ import {
   MapPin,
   Plus,
 } from "lucide-react";
-import NewAppointmentModal from "./NewAppointmentModal";
 
-interface Appointment {
-  id: string;
-  clientName: string;
-  therapistName: string;
-  date: Date;         // Añadimos el campo date
-  startTime: string;
-  endTime: string;
-  service: string;
-  status: "confirmed" | "pending" | "completed" | "cancelled";
-  room?: string;
-  phone?: string;
-}
+import { type Appointment } from '../types/appointment.types';
 
 interface WeekViewProps {
   className?: string;
+  weekDates: Date[];
+  currentDate: Date;
+  appointments: Appointment[];
+  onWeekChange: (direction: "prev" | "next") => void;
+  onTodayClick: () => void;
+  onNewAppointment: (appointment: Omit<Appointment, "id">) => void;
+  onSlotClick: (date: Date, time: string) => void;
 }
 
-const WeekView: React.FC<WeekViewProps> = ({ className = "" }) => {
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
-  const [selectedTime, setSelectedTime] = useState<string | undefined>();
-
-  // Mock appointment data
-  const mockAppointments: Appointment[] = [
-    {
-      id: "1",
-      clientName: "María González",
-      therapistName: "Dr. Ana Rodríguez",
-      date: new Date(2025, 8, 23), // Año, mes (0-11), día
-      startTime: "09:00",
-      endTime: "10:00",
-      service: "Fisioterapia",
-      status: "confirmed",
-      room: "Sala 1",
-      phone: "+591-123-4567",
-    },
-    {
-      id: "2",
-      clientName: "Carlos Mendoza",
-      therapistName: "Dr. Luis Pérez",
-      date: new Date(2025, 8, 24), // Año, mes (0-11), día
-      startTime: "10:30",
-      endTime: "11:30",
-      service: "Neurorehabilitación",
-      status: "confirmed",
-      room: "Sala 2",
-      phone: "+591-987-6543",
-    },
-    {
-      id: "3",
-      clientName: "Ana Herrera",
-      therapistName: "Dr. Ana Rodríguez",
-      date: new Date(2025, 8, 25), // Año, mes (0-11), día
-      startTime: "14:00",
-      endTime: "15:00",
-      service: "Terapia Ocupacional",
-      status: "pending",
-      room: "Sala 1",
-      phone: "+591-456-7890",
-    },
-    {
-      id: "4",
-      clientName: "Roberto Silva",
-      therapistName: "Dr. Carmen López",
-      date: new Date(2025, 8, 26), // Año, mes (0-11), día
-      startTime: "11:00",
-      endTime: "12:00",
-      service: "Psicoterapia",
-      status: "completed",
-      room: "Sala 3",
-      phone: "+591-321-0987",
-    },
-    {
-      id: "5",
-      clientName: "Sofía Vargas",
-      therapistName: "Dr. Luis Pérez",
-      date: new Date(2025, 8, 27), // Año, mes (0-11), día
-      startTime: "16:00",
-      endTime: "17:00",
-      service: "Fisioterapia",
-      status: "confirmed",
-      room: "Sala 2",
-      phone: "+591-654-3210",
-    },
-    {
-      id: "6",
-      clientName: "Sofía Vargas",
-      therapistName: "Dr. Luis Pérez",
-      date: new Date(2025, 8, 28), // Año, mes (0-11), día
-      startTime: "16:00",
-      endTime: "17:00",
-      service: "Fisioterapia",
-      status: "confirmed",
-      room: "Sala 2",
-      phone: "+591-654-3210",
-    },
-    {
-      id: "7",
-      clientName: "Sofía Vargas",
-      therapistName: "Dr. Luis Pérez",
-      date: new Date(2025, 8, 28), // Año, mes (0-11), día
-      startTime: "16:00",
-      endTime: "17:00",
-      service: "Fisioterapia",
-      status: "confirmed",
-      room: "Sala 2",
-      phone: "+591-654-3210",
-    },
-    {
-      id: "8",
-      clientName: "Sofía Vargas",
-      therapistName: "Dr. Luis Pérez",
-      date: new Date(2025, 8, 28), // Año, mes (0-11), día
-      startTime: "16:00",
-      endTime: "17:00",
-      service: "Fisioterapia",
-      status: "confirmed",
-      room: "Sala 2",
-      phone: "+591-654-3210",
-    },
-  ];
-
-  // Get current week dates
-  const getWeekDates = (date: Date) => {
-    const startOfWeek = new Date(date);
-    const day = startOfWeek.getDay();
-    const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
-    startOfWeek.setDate(diff);
-
-    const weekDates = [];
-    for (let i = 0; i < 7; i++) {
-      const date = new Date(startOfWeek);
-      date.setDate(startOfWeek.getDate() + i);
-      weekDates.push(date);
-    }
-    return weekDates;
-  };
-
-  const weekDates = getWeekDates(currentDate);
+// The component now only handles display logic
+const WeekView: React.FC<WeekViewProps> = ({
+  className = "",
+  weekDates,
+  appointments,
+  onWeekChange,
+  onTodayClick,
+  onSlotClick // Asegúrate de usar esta prop
+}) => {
   const timeSlots = Array.from({ length: 12 }, (_, i) => {
-    const hour = i + 8; // Start from 8 AM
+    const hour = i + 8;
     return `${hour.toString().padStart(2, "0")}:00`;
   });
 
-  const navigateWeek = (direction: "prev" | "next") => {
-    const newDate = new Date(currentDate);
-    newDate.setDate(currentDate.getDate() + (direction === "next" ? 7 : -7));
-    setCurrentDate(newDate);
-  };
-
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString("es-ES", {
-      weekday: "short",
-      day: "numeric",
-      month: "short",
-    });
+  const getAppointmentsForDay = (date: Date) => {
+    return appointments.filter(apt => 
+      new Date(apt.date).toDateString() === date.toDateString()
+    );
   };
 
   const getStatusColor = (status: Appointment["status"]) => {
@@ -180,28 +53,6 @@ const WeekView: React.FC<WeekViewProps> = ({ className = "" }) => {
       default:
         return "bg-gray-100 border-gray-300 text-gray-800";
     }
-  };
-
-  const getAppointmentsForDay = (date: Date) => {
-    return mockAppointments.filter(appointment => {
-      return (
-        appointment.date.getFullYear() === date.getFullYear() &&
-        appointment.date.getMonth() === date.getMonth() &&
-        appointment.date.getDate() === date.getDate()
-      );
-    });
-  };
-
-  const handleNewAppointment = (appointment: Omit<Appointment, "id">) => {
-    // Aquí implementarías la lógica para guardar la nueva cita
-    console.log("Nueva cita:", appointment);
-    // TODO: Integrar con el backend
-  };
-
-  const handleSlotClick = (date: Date, time: string) => {
-    setSelectedDate(date);
-    setSelectedTime(time);
-    setIsModalOpen(true);
   };
 
   return (
@@ -222,7 +73,7 @@ const WeekView: React.FC<WeekViewProps> = ({ className = "" }) => {
 
         <div className="flex items-center space-x-4">
           <button
-            onClick={() => navigateWeek("prev")}
+            onClick={() => onWeekChange("prev")}
             className="p-2 rounded-md hover:bg-gray-100 transition-colors duration-200"
             aria-label="Semana anterior"
           >
@@ -230,14 +81,14 @@ const WeekView: React.FC<WeekViewProps> = ({ className = "" }) => {
           </button>
 
           <button
-            onClick={() => setCurrentDate(new Date())}
+            onClick={onTodayClick}
             className="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-md hover:bg-blue-100 transition-colors duration-200"
           >
             Hoy
           </button>
 
           <button
-            onClick={() => navigateWeek("next")}
+            onClick={() => onWeekChange("next")}
             className="p-2 rounded-md hover:bg-gray-100 transition-colors duration-200"
             aria-label="Semana siguiente"
           >
@@ -275,7 +126,7 @@ const WeekView: React.FC<WeekViewProps> = ({ className = "" }) => {
 
           {/* Time Slots */}
           <div className="divide-y divide-gray-100">
-            {timeSlots.map((time, timeIndex) => (
+            {timeSlots.map((time) => (
               <div key={time} className="grid grid-cols-8 min-h-[100px]">
                 {/* Time Column */}
                 <div className="p-4 bg-gray-50 border-r border-gray-200 flex items-start">
@@ -285,7 +136,7 @@ const WeekView: React.FC<WeekViewProps> = ({ className = "" }) => {
                 </div>
 
                 {/* Day Columns */}
-                {weekDates.map((date, dayIndex) => {
+                {weekDates.map((date) => {
                   const dayAppointments = getAppointmentsForDay(date);
                   const timeAppointments = dayAppointments.filter(
                     (apt) => apt.startTime === time
@@ -312,7 +163,7 @@ const WeekView: React.FC<WeekViewProps> = ({ className = "" }) => {
                                 {appointment.therapistName}
                               </p>
                               <p className="text-xs text-gray-500 mt-1">
-                                {appointment.service}
+                                {appointment.serviceName || "Servicio no estamos consiguiendo el nombre"}
                               </p>
                             </div>
                           </div>
@@ -337,7 +188,7 @@ const WeekView: React.FC<WeekViewProps> = ({ className = "" }) => {
                       {/* Empty slot - clickable for new appointment */}
                       {timeAppointments.length === 0 && (
                         <div
-                          onClick={() => handleSlotClick(date, time)}
+                          onClick={() => onSlotClick(date, time)} // Usa la prop en lugar del estado local
                           className="h-full min-h-[80px] rounded-lg border-2 border-dashed border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-colors duration-200 flex items-center justify-center opacity-0 hover:opacity-100 cursor-pointer"
                         >
                           <Plus className="w-4 h-4 text-gray-400" />
@@ -373,15 +224,6 @@ const WeekView: React.FC<WeekViewProps> = ({ className = "" }) => {
           </div>
         </div>
       </div>
-
-      {/* New Appointment Modal */}
-      <NewAppointmentModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSave={handleNewAppointment}
-        selectedDate={selectedDate}
-        selectedTime={selectedTime}
-      />
     </div>
   );
 };

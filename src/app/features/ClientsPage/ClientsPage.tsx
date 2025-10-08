@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { Search } from "lucide-react";
+import { Search, PlusCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { ClientService } from "./services/ClientService";
 import { Pagination } from "./components/Pagination";
+import { CreateClientModal } from "./components/CreateClientModal";
 import type { Client } from "./types/Client";
 
 const ITEMS_PER_PAGE = 10;
@@ -14,6 +15,7 @@ export const ClientsPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [search, setSearch] = useState("");
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
 
@@ -54,18 +56,27 @@ export const ClientsPage = () => {
       <div className="bg-white rounded-lg shadow mb-6 p-4">
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-semibold">Gestión de Clientes</h1>
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Buscar clientes..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-            />
-            <Search
-              className="absolute left-3 top-2.5 text-gray-400"
-              size={20}
-            />
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Buscar clientes..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+              <Search
+                className="absolute left-3 top-2.5 text-gray-400"
+                size={20}
+              />
+            </div>
+            <button
+              onClick={() => setIsCreateModalOpen(true)}
+              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              <PlusCircle className="w-5 h-5 mr-2" />
+              Nuevo Cliente
+            </button>
           </div>
         </div>
       </div>
@@ -132,6 +143,15 @@ export const ClientsPage = () => {
           </>
         )}
       </div>
+
+      <CreateClientModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onClientCreated={() => {
+          setIsCreateModalOpen(false);
+          fetchClients();
+        }}
+      />
     </div>
   );
 };

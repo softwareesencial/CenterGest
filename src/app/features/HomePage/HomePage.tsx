@@ -1,7 +1,7 @@
-import WeekView from "../CalendarPage/components/WeekView";
+import WeekViewContainer from "../CalendarPage/containers/WeekViewContainer";
 
 export const HomePage = () => {
   return (<div>
-    <WeekView />
+    <WeekViewContainer />
   </div>);
 };
