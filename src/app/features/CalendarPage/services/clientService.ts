@@ -30,20 +30,30 @@ export class ClientService {
     const { data, error } = await supabase
       .from('client')
       .select('id, public_id, person:person_id(id, name, lastname)')
-      .or(`person.name.ilike.%${query}%,person.lastname.ilike.%${query}%`)
+      .ilike('person.name', `%${query}%`)
       .limit(10);
-
-    if (error) throw new Error(`Error searching clients: ${error.message}`);
-    if (!data) throw new Error('No data returned from query');
+    
+    if (error) {
+      console.error('Supabase error:', error);
+      throw new Error(`Error searching clients: ${error.message}`);
+    }
+    if (!data) {
+      console.warn('No data returned from query');
+      throw new Error('No data returned from query');
+    }
 
     // First cast to unknown, then to our expected type
     const typedData = data as unknown as SupabaseClientResponse[];
     
-    return typedData.map(d => ({
-      id: d.id.toString(),
-      name: d.person.name,
-      lastname: d.person.lastname,
-      public_id: d.public_id
-    }));
-  }
+    // Filter out records where person is null before mapping
+    const result = typedData
+      .filter(d => d.person !== null)
+      .map(d => ({
+        id: d.id.toString(),
+        name: d.person.name,
+        lastname: d.person.lastname,
+        public_id: d.public_id
+      }));
+    return result;
+}
 }
